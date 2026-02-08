@@ -1,0 +1,13 @@
+python-dotenv>=1.0.0
+PySide6>=6.6
+google-generativeai>=0.3.0
+Pillow>=10.0
+pytesseract>=0.3.10
+requests>=2.31.0
+
+# Firebase (optional - for user profile and token tracking)
+# firebase-admin>=6.0.0
+
+# Windows-only dependencies
+pyhwpx>=1.6.6; sys_platform == "win32"
+pywin32>=305; sys_platform == "win32"

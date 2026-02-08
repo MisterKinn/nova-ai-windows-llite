@@ -1,0 +1,259 @@
+# Nova AI Lite - Image Instructions Prompt
+# Image-specific guidance to improve accuracy.
+
+[PROMPT]
+🔴 OCR RULES (Nova AI Lite)
+
+1) TEXT FIRST, FORMULAS SECOND
+2) DO NOT SKIP KOREAN TEXT OR QUESTION NUMBERS
+3) READ TOP TO BOTTOM, LINE BY LINE
+4) KEEP ORIGINAL LINE BREAKS (use insert_paragraph)
+5) INLINE MATH: split text and formulas
+6) KEEP INDENTATION AND SPACES
+
+If it is a math problem, add this line at the very top of the code (do not output [CODE]):
+MATH_CHOICES_EQUATION = True
+
+✅ Indentation/spacing rule:
+- If a line is indented, insert the same leading spaces using insert_text('    ') before the text.
+- Do not collapse multiple spaces that are visible in the image.
+- For math subjects ONLY, if the image shows a tab/indent before a formula line, use one tab:
+  insert_text('\t') then insert_equation(...)
+- After a tabbed formula line, ALWAYS add exactly ONE blank line before the next line:
+  insert_paragraph() to move to the next line, then insert_paragraph() again to leave one empty line.
+  (Do this even if the next line is text; do not 붙여쓰기.)
+- For the first line AFTER a tabbed formula line (after the blank line),
+  ALWAYS start with two leading spaces from the left margin:
+  insert_text('  ') before the text.
+- Do NOT use tab for normal text. Tab is ONLY for indented formula lines.
+- If you use a tab for an indented formula line, DO NOT also add leading spaces.
+
+🔢 PROBLEM NUMBER BOLD:
+- If a problem number like "30." appears, make only that part bold:
+  set_bold(True)
+  insert_text('30.')
+  set_bold(False)
+- Do NOT use insert_equation for problem numbers.
+- For text immediately below a problem number line, ALWAYS start the line with two spaces:
+  insert_text('  ') before the text.
+- Do NOT guess 1 space; it must be exactly 2 spaces from the left margin.
+- This rule does NOT apply inside boxes (box/header/box_white content).
+- If you use a tab for that line, do NOT add any leading spaces.
+
+📌 SCORE RIGHT-ALIGN:
+- If the score (e.g. [4점]) appears at the bottom right in math problems:
+  set_align_right_next_line()
+  insert_text('[4점]')
+ - If OCR shows the score alone on its line, right-align only that line.
+
+📌 SCORE SPACING:
+- If a score like [2점]/[3점]/[4점] appears at the end of a line,
+  insert exactly ONE space before the score.
+
+📝 CHOICES LINE (MULTIPLE CHOICE):
+- When entering choices, type ①②③④⑤ as plain text (insert_text), not equations.
+- If all 5 choices are on ONE line, use justify alignment:
+  set_align_justify_next_line()
+  insert_text('①') + insert_text(' ') + insert_equation('ㄱ,') + insert_text(' ') + insert_equation('ㄴ')
+- If the problem is English and choices are vertically listed, put each choice on its own line:
+  insert_paragraph() between each choice line for clean vertical layout.
+- Always insert ONE space after ①/②/③/④/⑤ before the value or text (never 붙여쓰기).
+- If choices are split across multiple lines, do NOT use justify alignment.
+- If you see "② ㄱ, ㄴ", ensure a space between ㄱ, and ㄴ.
+- Insert one empty line before the choices line (leave a blank line):
+  insert_paragraph() to move to the next line, then insert_paragraph() again to leave one empty line.
+- For the choices line, insert two leading spaces at the start of the line.
+- CRITICAL: Choices must be HORIZONTAL, not vertical.
+- DO NOT insert insert_paragraph() between choices.
+- Output all 5 choices on ONE line with spacing between each choice.
+- Example (single line):
+  set_align_justify_next_line()
+  insert_text('  ')
+  insert_text('①') + insert_text(' ') + insert_equation('{1 over 25}') + insert_text('    ') + insert_text('②') + insert_text(' ') + insert_equation('{1 over 5}') + insert_text('    ') + insert_text('③') + insert_text(' ') + insert_equation('1') + insert_text('    ') + insert_text('④') + insert_text(' ') + insert_equation('5') + insert_text('    ') + insert_text('⑤') + insert_text(' ') + insert_equation('25')
+
+📦 TEMPLATE + PLACEHOLDER RULE (@@@ / ###):
+- If you detect a container, DO NOT draw it manually. Insert the matching HWP template first:
+  - If the container header has "<보기>" text: insert_template('header.hwp')
+  - If there is a bordered container WITHOUT "<보기>" text: insert_template('box.hwp')
+  - If there is a container area but NO visible border line: insert_template('box_white.hwp')
+  - For English reading passages with no visible border around the passage, use box_white.hwp.
+- After inserting any template box, set the text inside the box to justify alignment:
+  - set_align_justify_next_line() before typing content in the box (Ctrl+Shift+M).
+- Inside the box content, use single spaces only; do NOT add double spaces unless they are explicitly visible in the image.
+- After inserting the template, you MUST type by replacing placeholders:
+  - focus_placeholder('@@@')  -> type ALL non-box content (problem statement, etc.)
+  - focus_placeholder('###')  -> type ONLY the content inside the container
+  - focus_placeholder('&&&')  -> type choices AFTER the container (header.hwp, box.hwp, box_white.hwp)
+- IMPORTANT: call focus_placeholder('###') immediately BEFORE typing box content.
+  Do NOT place focus_placeholder('###') at the end.
+- focus_placeholder(...) deletes the marker text and leaves the cursor there. Then type normally.
+
+📌 SAMPLE (Correct box flow):
+insert_template('header.hwp')
+focus_placeholder('@@@')
+... non-box content ...
+focus_placeholder('###')
+set_align_justify_next_line()
+... box content ...
+exit_box()
+insert_paragraph()
+focus_placeholder('&&&')
+... choices ...
+- If you already typed inside the box (after focus_placeholder('###')) and need to type
+  choices outside the box, DO NOT call focus_placeholder('@@@') again.
+  Instead, exit the box and continue outside:
+  - exit_box()
+  - insert_paragraph()
+  - focus_placeholder('&&&')  (header.hwp, box.hwp, box_white.hwp)
+
+📦 BOX RULE (fallback only):
+- If template/placeholder workflow is not applicable, then:
+  - Use insert_view_box() only when "<보기>" is explicitly visible.
+  - Otherwise use insert_box() ... exit_box().
+
+✅ Correct pattern:
+insert_text('문장 ')
+insert_equation('x=1')
+insert_text(' 일 때')
+
+⚠️ For numbered choices, keep them on ONE line with spacing:
+  - Type ①②③④⑤ as plain text (insert_text), not equations.
+  - Always insert one space after ①/②/③/④/⑤ before the value or text.
+  - Example:
+    insert_text('① 6    ② 9    ③ 12    ④ 15    ⑤ 18')
+
+🔴 FORMULA RULES (HwpEqn)
+
+Use insert_equation() for ALL math.
+Do not write formulas in insert_text().
+For English letters/words, use insert_equation() so they render in HancomEQN.
+
+Powers: wrap superscripts with braces
+  ✅ {{t^2}}   ✅ {{x^3}}
+
+Fractions: use 'over'
+  ✅ {a over b}
+
+Square root:
+  ✅ sqrt {x+1}
+- For n-th roots, ALWAYS use the "of" form:
+  ✅ {root {4} of {32}}  ✅ {root {8} of {4}}
+
+Multiplication:
+  ✅ 3 times x
+
+PLUS-MINUS:
+  ✅ '+-' renders ±
+
+➕ PLUS SIGN:
+- If you see + in a formula, it MUST appear inside the equation string.
+  ✅ insert_equation('p + 27')  (keep spaces around +)
+  ❌ insert_equation('p') + insert_equation('27')  (this loses the +)
+  ❌ insert_equation('p+27') if it renders incorrectly; prefer 'p + 27'
+
+✅ PLUS EXAMPLE (VECTOR / DOT / ABS):
+- Use + inside ONE equation string, not concatenated equations:
+  insert_equation("LEFT ( {vec{PA}} + {vec{PB}} RIGHT ) CDOT LEFT ( {vec{PQ}} + {vec{PB}} RIGHT ) = 2 vert `{vec{PQ}}``vert ^{2}")
+
+🧮 BRACKETS WITH SUBSCRIPTS:
+- If you see bracketed expressions like {a_n} or (a_n), write with explicit left/right:
+  LEFT { a _{n} RIGHT }
+  LEFT ( a _{n} RIGHT )
+
+🧩 COMMA-SEPARATED VARIABLES:
+- If you see "p, q", separate each variable into its own equation:
+  insert_equation('p') + insert_text(', ') + insert_equation('q')
+- Do NOT put "p,q" inside a single equation.
+
+📏 LINE SEGMENT NOTATION:
+- If you see line/segment notation like AB, use rm before bar:
+  rm {bar{AB}}
+- Example: insert_equation('rm {bar{AB}}')
+
+🟠 POINT/Triangle NOTATION:
+- If you see "점 A" or "점 B", write as:
+  rm A
+- If you see "삼각형 ABC", write as:
+  rm ABC
+
+🟣 GEOMETRY/VECTOR SPECIAL RULE:
+- In geometry/vector problems ONLY, if an ellipse is named C, do NOT prefix C with rm.
+- In geometry/vector problems ONLY, when writing focus F, use braces:
+  {rm F} (do NOT write rm F without braces).
+- In geometry problems, point letters (A, B, C, P, Q, R, etc.) must be written as:
+  {rm A}, {rm B}, {rm C}, {rm P}, {rm Q}, {rm R}.
+
+📐 ANGLE NOTATION:
+- If you see angle notation like ANGLE HCG, prefix with rm:
+  rm ANGLE HCG
+
+🎲 PROBABILITY SPECIAL RULE:
+- In probability/statistics problems ONLY, when typing event A or B in formulas,
+  do NOT prefix with rm (use plain A, B inside insert_equation).
+- Outside probability/statistics, for A or B as symbols, ALWAYS use {rm A} or {rm B}.
+- In probability/statistics problems ONLY, do NOT prefix X with rm (use plain X).
+- For probability/statistics problems, if symbols P or V appear, ALWAYS wrap with braces:
+  use {rm P} and {rm V} (do NOT write rmP or rmV without braces).
+- If E or N appears, ALWAYS write as {rm E} or {rm N} (with braces).
+
+| ABSOLUTE VALUE IN FORMULA:
+- For any absolute value |X|, wrap both sides with vert and backticks:
+  vert `X``vert
+- Example: P(vert `Z``vert <= 2.58)=0.99
+
+➡️ VECTOR NOTATION:
+- If a vector is shown (arrow over a), write as:
+  {vec{a}} = LEFT ( 4,`1 RIGHT )
+
+✅ VECTOR WITH CAPITAL POINTS:
+- If a vector uses capital points (A,B,C,...), prefix the point name with rm inside vec:
+  vert` {vec{rmPB}}``vert = 14
+
+⚠️ CODE FORMAT:
+- Do NOT break insert_equation/insert_text across multiple lines.
+- Keep each function call on a single line.
+
+′ PRIME NOTATION:
+- If a prime is shown in a formula (e.g., f′, x′), use a single quote (') not backslash:
+  f' , x'
+- For focus points like F′, write as: rm F prime
+
+📊 TABLE RULE:
+- If the image contains a table, use insert_table(rows, cols, cell_data).
+- cell_data must be a list of rows, each row is a list of strings (one value per cell).
+- DO NOT put all values in a single cell or single list.
+- If a table cell contains math, prefix it with "EQ:" so it renders as equation.
+- For probability tables, pass align_center=True to center all cell contents.
+- After insert_table(...), Nova AI Lite will exit the table automatically (cursor moves outside).
+- Example:
+  insert_table(3, 2, cell_data=[
+      ['z', 'EQ:P(0<=Z<=z)'],
+      ['0.5', '0.191'],
+      ['1.0', '0.341'],
+  ])
+
+🔤 SPLIT CONCATENATED EXPRESSIONS:
+- If an expression looks like "ax직선OB" (no spacing), split into separate equations:
+  insert_equation('a') + insert_equation('x') + insert_equation('rm {bar{OB}}')
+- Do NOT insert spaces between these equations.
+
+🧩 BOXED TEXT INSIDE FORMULA:
+- If a small box surrounds text inside a formula, wrap it as:
+  {BOX{````(가)````}}
+- Example: insert_equation('{BOX{````(가)````}}')
+
+⋯ DOTS (ELLIPSIS) IN FORMULA:
+- If you see "......" between terms, use CDOTS in formula:
+  insert_equation('CDOTS')
+- Keep spacing around dots as in the image by inserting spaces with insert_text(' ') before/after.
+- If there are two separate dot groups, use CDOTSCDOTS.
+
+ⓐ CIRCLED KOREAN CHOICES:
+- If you see ㄱ/ㄴ/ㄷ/ㄹ in a circle, convert to:
+  ㉠ ㉡ ㉢ ㉣ ㉤
+- Example: insert_equation('㉠') or insert_text('㉠')
+
+Read the image carefully and extract EVERYTHING.
+
+🧾 VERTICAL SPACE RULE:
+- Do NOT use insert_small_paragraph() (4pt spacer lines are disabled in Nova AI Lite).

@@ -1,0 +1,16 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Build Windows onefile exe with PyInstaller",
+			"type": "shell",
+			"command": "pyinstaller --onefile --noconsole gui_app.py --name \"Nova AI Lite\" --add-data \"prompts;prompts\" --add-data \"templates;templates\" --add-data \".env;.\" --hidden-import pyhwpx --hidden-import google.generativeai --hidden-import PySide6 --hidden-import cv2 --hidden-import PIL",
+			"args": [],
+			"isBackground": false,
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": "build"
+		}
+	]
+}
